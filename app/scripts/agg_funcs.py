@@ -17,6 +17,7 @@ class DataAggregation:
         new_accounts_count = pd.read_sql('''
         SELECT EXTRACT(DAY FROM created_at) AS p_day, COUNT(*)
         FROM "Users"
+        WHERE username IS NOT NULL
         GROUP BY p_day
         ORDER BY p_day;''', con=self.conn)
 
@@ -84,11 +85,15 @@ class DataAggregation:
         """
         Создание csv-файла, хранящего в себе агрегационную информацию о пользователях и их действиях по дням
         """
-        data = pd.DataFrame({"day": range(self.min_day, self.max_day + 1)})
+        try:
+            data = pd.DataFrame({"day": range(self.min_day, self.max_day + 1)})
 
-        data["new_accounts"] = self.get_new_accounts_count()["count"].iloc[self.min_day-1:self.max_day-1]
-        data["new_messages"] = self.get_new_messages_count()["count"].iloc[self.min_day-1:self.max_day-1]
-        data["anonymous_messages_pct"] = data["day"].apply(self.get_message_anonymous_percentage)
-        data["new_topics_pct"] = data["day"].apply(self.get_new_topics_percentage)
+            data["new_accounts"] = self.get_new_accounts_count()["count"].iloc[self.min_day-1:self.max_day]
+            data["new_messages"] = self.get_new_messages_count()["count"].iloc[self.min_day-1:self.max_day]
+            data["anonymous_messages_pct"] = data["day"].apply(self.get_message_anonymous_percentage)
+            data["new_topics_pct"] = data["day"].apply(self.get_new_topics_percentage)
 
-        data.to_csv("data/agg_data.csv", index=False)
+            data.to_csv("data/agg_data.csv", index=False)
+        
+        except Exception as e:
+            print("Ошибка во время подсчёта агрегационной информации:", e)

@@ -1,6 +1,7 @@
 -- Кол-во созданных аккаунтов
 SELECT EXTRACT(DAY FROM created_at) AS p_day, COUNT(*)
 FROM "Users"
+WHERE username IS NOT NULL
 GROUP BY p_day
 ORDER BY p_day;
 
